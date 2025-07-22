@@ -4,16 +4,17 @@ import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { Navbar } from '@/components/ui/navbar'
 import { supabaseService, type Toy } from '@/lib/supabase/service'
-import { Save, Wifi, WifiOff } from 'lucide-react'
+import { Save, Wifi, WifiOff, Unlink } from 'lucide-react'
 
-const roleTypes = ['Story Teller', 'Teacher', 'Friend', 'Coach']
-const languages = ['English', 'Hindi', 'Spanish', 'French']
-const voices = ['Sparkles for Kids', 'Friendly Voice', 'Warm Narrator', 'Cheerful Guide']
-const sensitivities = [
-  { label: 'Low', value: 'LOW' },
-  { label: 'Medium', value: 'MEDIUM' },
-  { label: 'High', value: 'HIGH' },
-]
+const roleTypes = ['Math Tutor', 'Science Tutor', 'Story Teller', 'Puzzle Solver']
+const languages = ['English', 'Spanish', 'French', 'German', 'Chinese']
+const voices = ['Sparkles for Kids', 'Deep Voice', 'Soft Calm Voice']
+
+const ComingSoonBadge = () => (
+  <div className="bg-orange/10 border border-orange/30 text-orange text-xs font-medium px-2 py-0.5 rounded-full">
+    Coming Soon
+  </div>
+)
 
 export default function ToyDetailsPage() {
   const params = useParams()
@@ -26,9 +27,9 @@ export default function ToyDetailsPage() {
   // Form fields
   const [name, setName] = useState('')
   const [roleType, setRoleType] = useState('')
+  const [instruction, setInstruction] = useState('')
   const [language, setLanguage] = useState('')
   const [voice, setVoice] = useState('')
-  const [kidName, setKidName] = useState('')
   const [sensitivity, setSensitivity] = useState('MEDIUM')
 
   useEffect(() => {
@@ -46,9 +47,9 @@ export default function ToyDetailsPage() {
         // Initialize form fields
         setName(foundToy.name || '')
         setRoleType(foundToy.role_type || 'Story Teller')
+        setInstruction(foundToy.instruction || '')
         setLanguage(foundToy.language || 'English')
         setVoice(foundToy.voice || 'Sparkles for Kids')
-        setKidName(foundToy.kid_name || '')
         setSensitivity(foundToy.conversation_sensitivity || 'MEDIUM')
       } else {
         setError('Toy not found')
@@ -68,17 +69,17 @@ export default function ToyDetailsPage() {
       setSaving(true)
       setError(null)
 
+      // Only name can be updated for now
       await supabaseService.updateToyDetails({
         toyId: toy.id,
         name,
         roleType,
         language,
         voice,
-        kidName,
-        conversationSensitivity: sensitivity,
       })
 
-      // Redirect back to toys list
+      // Show success message and redirect
+      alert('Toy details updated successfully!')
       router.push('/toys')
     } catch (err: any) {
       setError(err.message || 'Failed to update toy details')
@@ -87,10 +88,30 @@ export default function ToyDetailsPage() {
     }
   }
 
-  if (loading) {
+  const handleUnbind = async () => {
+    if (!toy) return
+
+    const confirm = window.confirm(
+      'Are you sure you want to unbind this toy? This action cannot be undone.'
+    )
+
+    if (confirm) {
+      try {
+        setLoading(true)
+        await supabaseService.unbindToy(toy.id, toy.toy_mac_id)
+        alert('Toy has been unbound successfully!')
+        router.push('/toys')
+      } catch (err: any) {
+        setError(err.message || 'Failed to unbind toy')
+        setLoading(false)
+      }
+    }
+  }
+
+  if (loading && !toy) {
     return (
       <div className="min-h-screen bg-white">
-        <Navbar title="Toy Details" showBackButton />
+        <Navbar title="Customize Your Toy" showBackButton />
         <div className="flex items-center justify-center py-12">
           <div className="w-8 h-8 border-4 border-orange border-t-transparent rounded-full animate-spin" />
         </div>
@@ -101,7 +122,7 @@ export default function ToyDetailsPage() {
   if (!toy) {
     return (
       <div className="min-h-screen bg-white">
-        <Navbar title="Toy Details" showBackButton />
+        <Navbar title="Customize Your Toy" showBackButton />
         <div className="text-center py-12">
           <p className="text-grey">Toy not found</p>
         </div>
@@ -111,43 +132,21 @@ export default function ToyDetailsPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar title="Toy Details" showBackButton />
+      <Navbar title="Customize Your Toy" showBackButton />
       
       <div className="max-w-2xl mx-auto px-4 py-8">
-        {/* Toy status */}
-        <div className="card mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-black mb-1">Connection Status</h3>
-              <p className="text-sm text-grey">
-                {toy.is_wifi_provisioned ? 'Connected to WiFi' : 'Not connected'}
-              </p>
-            </div>
-            {toy.is_wifi_provisioned ? (
-              <Wifi className="w-6 h-6 text-green" />
-            ) : (
-              <WifiOff className="w-6 h-6 text-grey" />
-            )}
-          </div>
-          {toy.serial_number && (
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <p className="text-sm text-grey">Serial Number</p>
-              <p className="font-mono text-black">{toy.serial_number}</p>
-            </div>
-          )}
-        </div>
-
         {/* Error message */}
         {error && (
-          <div className="bg-red/10 border border-red text-red rounded-8 p-4 text-sm mb-6">
+          <div className="bg-red/10 border border-red text-red rounded-lg p-4 text-sm mb-6">
             {error}
           </div>
         )}
 
         {/* Edit form */}
         <div className="space-y-6">
+          {/* Toy Name */}
           <div>
-            <label className="block text-sm font-medium text-black mb-2">
+            <label className="block text-sm font-bold text-black mb-2">
               Toy Name
             </label>
             <input
@@ -155,46 +154,69 @@ export default function ToyDetailsPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="input-field"
-              placeholder="Enter toy name"
+              placeholder="Enter your Toy Name"
             />
           </div>
 
+          {/* Role/Category */}
           <div>
-            <label className="block text-sm font-medium text-black mb-2">
-              Child's Name
-            </label>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="block text-sm font-bold text-black">
+                Role/Category
+              </label>
+              <ComingSoonBadge />
+            </div>
             <input
               type="text"
-              value={kidName}
-              onChange={(e) => setKidName(e.target.value)}
-              className="input-field"
-              placeholder="Enter child's name"
+              value={roleType}
+              disabled
+              className="input-field-disabled"
+            />
+            <div className="flex gap-2 mt-2 overflow-x-auto pb-2">
+              {roleTypes.map((role) => (
+                <button
+                  key={role}
+                  disabled
+                  className={`btn-chip-disabled ${roleType === role ? 'active' : ''}`}
+                >
+                  {role}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Additional Instructions */}
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <label className="block text-sm font-bold text-black">
+                Additional Instructions
+              </label>
+              <ComingSoonBadge />
+            </div>
+            <p className="text-sm text-gray-500 mb-2">
+              Cheeko is already skilled to interact with your kid. If you want to mention anything specific to cheeko, write it down.
+            </p>
+            <textarea
+              value={instruction}
+              disabled
+              rows={4}
+              className="input-field-disabled w-full"
+              placeholder="Help my child learn addition and subtraction through fun quizzes and simple explanations..."
             />
           </div>
 
+          {/* Language */}
           <div>
-            <label className="block text-sm font-medium text-black mb-2">
-              Role Type
-            </label>
-            <select
-              value={roleType}
-              onChange={(e) => setRoleType(e.target.value)}
-              className="input-field"
-            >
-              {roleTypes.map((role) => (
-                <option key={role} value={role}>{role}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-black mb-2">
-              Language
-            </label>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="block text-sm font-bold text-black">
+                Language
+              </label>
+              <ComingSoonBadge />
+            </div>
             <select
               value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              className="input-field"
+              disabled
+              className="input-field-disabled appearance-none"
             >
               {languages.map((lang) => (
                 <option key={lang} value={lang}>{lang}</option>
@@ -202,46 +224,10 @@ export default function ToyDetailsPage() {
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-black mb-2">
-              Voice
-            </label>
-            <select
-              value={voice}
-              onChange={(e) => setVoice(e.target.value)}
-              className="input-field"
-            >
-              {voices.map((v) => (
-                <option key={v} value={v}>{v}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-black mb-2">
-              Conversation Sensitivity
-            </label>
-            <div className="grid grid-cols-3 gap-4">
-              {sensitivities.map((sens) => (
-                <button
-                  key={sens.value}
-                  onClick={() => setSensitivity(sens.value)}
-                  className={`py-3 px-4 rounded-8 font-medium transition-all ${
-                    sensitivity === sens.value
-                      ? 'bg-orange text-white'
-                      : 'bg-gray-100 text-black hover:bg-gray-200'
-                  }`}
-                >
-                  {sens.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Save button */}
           <button
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || loading}
             className="btn-primary w-full flex items-center justify-center gap-2"
           >
             {saving ? (
@@ -252,6 +238,16 @@ export default function ToyDetailsPage() {
                 Save Changes
               </>
             )}
+          </button>
+
+          {/* Unbind Toy button */}
+          <button
+            onClick={handleUnbind}
+            disabled={loading || saving}
+            className="btn-outline w-full flex items-center justify-center gap-2"
+          >
+            <Unlink className="w-5 h-5" />
+            Unbind Toy
           </button>
         </div>
       </div>

@@ -87,51 +87,69 @@ export default function ToysPage() {
             <div className="w-8 h-8 border-4 border-orange border-t-transparent rounded-full animate-spin" />
           </div>
         ) : toys.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {toys.map((toy) => (
-              <div
-                key={toy.id}
-                onClick={() => router.push(`/toys/${toy.id}`)}
-                className="card hover:shadow-lg transition-shadow cursor-pointer"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-12 h-12 bg-orange/10 rounded-16 flex items-center justify-center">
-                    <Cpu className="w-6 h-6 text-orange" />
-                  </div>
-                  {toy.is_wifi_provisioned ? (
-                    <Wifi className="w-5 h-5 text-green" />
-                  ) : (
-                    <WifiOff className="w-5 h-5 text-grey" />
-                  )}
-                </div>
-
-                <h3 className="text-lg font-semibold text-black mb-2">
-                  {toy.name}
-                </h3>
-                <p className="text-grey text-sm mb-4">{toy.role_type}</p>
-
-                <div className="space-y-2 text-sm">
-                  {toy.kid_name && (
-                    <div className="flex justify-between">
-                      <span className="text-grey">Child:</span>
-                      <span className="text-black">{toy.kid_name}</span>
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {toys.map((toy) => (
+                <div
+                  key={toy.id}
+                  onClick={() => router.push(`/toys/${toy.id}`)}
+                  className="card hover:shadow-lg transition-shadow cursor-pointer"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-12 h-12 bg-orange/10 rounded-16 flex items-center justify-center">
+                      <Cpu className="w-6 h-6 text-orange" />
                     </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-grey">Language:</span>
-                    <span className="text-black">
-                      {toy.language || "English"}
-                    </span>
+                    {toy.is_wifi_provisioned ? (
+                      <Wifi className="w-5 h-5 text-green" />
+                    ) : (
+                      <WifiOff className="w-5 h-5 text-grey" />
+                    )}
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-grey">Voice:</span>
-                    <span className="text-black truncate ml-2">
-                      {toy.voice || "Default"}
-                    </span>
+
+                  <h3 className="text-lg font-semibold text-black mb-1">
+                    {toy.name}
+                  </h3>
+
+                  <div className="space-y-1 text-sm">
+                    {toy.kid_name && (
+                      <div className="flex justify-between">
+                        <span className="text-grey">Child:</span>
+                        <span className="text-black">{toy.kid_name}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-grey">Role:</span>
+                      <span className="text-black">{toy.role_type}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-grey">Language:</span>
+                      <span className="text-black">
+                        {toy.language || "English"}
+                      </span>
+                    </div>
+                    {/*<div className="flex justify-between">
+                      <span className="text-grey">Voice:</span>
+                      <span className="text-black truncate ml-2">
+                        {toy.voice || "Default"}
+                      </span>
+                    </div>*/}
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+
+            {/* Feature cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {featureCards.map((feature, index) => (
+                <div key={index} className="card text-center">
+                  <div className="text-4xl mb-4">{feature.icon}</div>
+                  <h3 className="text-lg font-semibold text-black mb-2">
+                    {feature.title}
+                  </h3>
+                  <p className="text-grey text-sm">{feature.description}</p>
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           <div className="space-y-8">

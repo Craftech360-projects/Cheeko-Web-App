@@ -267,6 +267,35 @@ class SupabaseService {
     }
   }
 
+  async unbindToy(toyId: string, toyMacId?: string): Promise<void> {
+    try {
+      const { data: { user } } = await this.client.auth.getUser()
+      if (!user) throw new Error('You must be logged in to unbind a toy.')
+
+      // Delete the toy from the toys table
+      const { error: toyError } = await this.client
+        .from('toys')
+        .delete()
+        .eq('id', toyId)
+        .eq('user_id', user.id)
+
+      if (toyError) throw toyError
+
+      // If toy has a MAC ID, set it as inactive in mqtt_auth
+      if (toyMacId) {
+        const { error: mqttError } = await this.client
+          .from('mqtt_auth')
+          .update({ is_active: false })
+          .eq('mac_id', toyMacId)
+
+        if (mqttError) throw mqttError
+      }
+    } catch (error) {
+      console.error('Failed to unbind toy:', error)
+      throw new Error('An unexpected error occurred while unbinding the toy.')
+    }
+  }
+
   async signOut(): Promise<void> {
     const { error } = await this.client.auth.signOut()
     if (error) throw error
