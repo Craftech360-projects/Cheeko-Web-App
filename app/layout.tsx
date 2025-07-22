@@ -7,6 +7,7 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Cheeko - Smart Toy Companion',
   description: 'Activate and manage your Cheeko smart toys',
+  manifest: '/site.webmanifest',
 }
 
 export default function RootLayout({

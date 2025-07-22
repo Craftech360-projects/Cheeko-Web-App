@@ -189,7 +189,7 @@ export default function ToyActivationPage() {
               onKeyDown={(e) => handleKeyDown(index, e)}
               onPaste={index === 0 ? handlePaste : undefined}
               disabled={loading}
-              className="w-14 h-16 text-center text-2xl font-semibold border-2 border-orange rounded-8 focus:outline-none focus:ring-2 focus:ring-orange focus:border-transparent disabled:opacity-50"
+              className="w-10 h-12 sm:w-14 sm:h-16 text-center text-xl sm:text-2xl font-semibold border-2 border-orange rounded-8 focus:outline-none focus:ring-2 focus:ring-orange focus:border-transparent disabled:opacity-50"
             />
           ))}
         </div>
